@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voice Gender Recognition</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h1>AI-Based Voice Gender Recognition</h1>
+    <p>Record your voice and check gender prediction.</p>
+
+    <button id="recordBtn">🎤 Start Recording</button>
+    <button id="stopBtn" disabled>🛑 Stop Recording</button>
+
+    <audio id="audioPlayer" controls style="display:none;"></audio>
+
+    <div id="result" class="result" style="display:none;">
+        <h2>Prediction:</h2>
+        <p id="gender">Gender: --</p>
+        <p id="confidence">Confidence: --%</p>
+        <button id="takeAgainBtn">Take Again</button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
