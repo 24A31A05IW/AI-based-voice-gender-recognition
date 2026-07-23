@@ -1,29 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Voice Gender Recognition</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>VoxID | AI Voice Gender Recognition</title>
+
+    <meta name="description"
+        content="Analyze voice recordings with AI-powered gender recognition. Record or upload audio and receive instant predictions with confidence scores.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-<div class="container">
-    <h1>AI-Based Voice Gender Recognition</h1>
-    <p>Record your voice and check gender prediction.</p>
 
-    <button id="recordBtn">🎤 Start Recording</button>
-    <button id="stopBtn" disabled>🛑 Stop Recording</button>
+    <div class="background-glow glow-one"></div>
+    <div class="background-glow glow-two"></div>
 
-    <audio id="audioPlayer" controls style="display:none;"></audio>
+    <main class="app">
 
-    <div id="result" class="result" style="display:none;">
-        <h2>Prediction:</h2>
-        <p id="gender">Gender: --</p>
-        <p id="confidence">Confidence: --%</p>
-        <button id="takeAgainBtn">Take Again</button>
-    </div>
-</div>
+        <section class="hero">
 
-<script src="script.js"></script>
+            <span class="badge">
+                <i class="fa-solid fa-sparkles"></i>
+                AI Powered
+            </span>
+
+            <h1>
+                Voice Gender
+                <span>Recognition</span>
+            </h1>
+
+            <p>
+                Record your voice or upload an audio file to receive an AI-powered gender prediction with confidence
+                analysis.
+            </p>
+
+        </section>
+
+        <section class="voice-card">
+
+            <div class="mic-wrapper">
+
+                <div class="pulse-ring"></div>
+
+                <button id="recordBtn" class="mic-button">
+                    <i class="fa-solid fa-microphone"></i>
+                </button>
+
+            </div>
+
+            <h2 id="statusText">
+                Ready to Record
+            </h2>
+
+            <p class="subtitle">
+                Press the microphone to begin.
+            </p>
+
+            <div id="timer">
+                00:00
+            </div>
+
+            <div class="button-group">
+
+                <button id="recordBtnAlt" class="primary-btn">
+                    Start Recording
+                </button>
+
+                <button id="stopBtn" class="secondary-btn" disabled>
+                    Stop
+                </button>
+
+            </div>
+
+            <div class="upload-area">
+
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+
+                <h3>Upload Audio</h3>
+
+                <p>
+                    Drag & Drop or choose a WAV / MP3 file.
+                </p>
+
+                <input
+                    type="file"
+                    id="audioUpload"
+                    accept=".wav,.mp3,audio/*">
+
+            </div>
+
+            <audio
+                id="audioPlayer"
+                controls
+                hidden>
+            </audio>
+
+        </section>
+
+        <section
+            id="result"
+            class="result-card hidden">
+
+            <div class="result-header">
+
+                <i class="fa-solid fa-circle-check"></i>
+
+                <h2>
+                    Prediction Complete
+                </h2>
+
+            </div>
+
+            <div class="prediction">
+
+                <div id="genderIcon">
+                    👤
+                </div>
+
+                <h3 id="gender">
+                    --
+                </h3>
+
+            </div>
+
+            <div class="confidence-wrapper">
+
+                <div class="confidence-top">
+
+                    <span>
+                        Confidence
+                    </span>
+
+                    <span id="confidence">
+                        0%
+                    </span>
+
+                </div>
+
+                <div class="progress">
+
+                    <div
+                        id="progressBar"
+                        class="progress-fill">
+                    </div>
+
+                </div>
+
+            </div>
+
+            <button id="takeAgainBtn" class="primary-btn">
+                Analyze Another Voice
+            </button>
+
+        </section>
+
+        <section class="features">
+
+            <article class="feature">
+
+                <i class="fa-solid fa-microphone-lines"></i>
+
+                <h3>Live Recording</h3>
+
+                <p>
+                    Capture your voice directly from your browser.
+                </p>
+
+            </article>
+
+            <article class="feature">
+
+                <i class="fa-solid fa-wave-square"></i>
+
+                <h3>Audio Upload</h3>
+
+                <p>
+                    Upload existing recordings in seconds.
+                </p>
+
+            </article>
+
+            <article class="feature">
+
+                <i class="fa-solid fa-brain"></i>
+
+                <h3>AI Analysis</h3>
+
+                <p>
+                    Predict gender with confidence scoring.
+                </p>
+
+            </article>
+
+        </section>
+
+        <footer>
+
+            <p>
+                Built with HTML, CSS and JavaScript.
+            </p>
+
+        </footer>
+
+    </main>
+
+    <script src="script.js"></script>
+
 </body>
+
 </html>
