@@ -35,6 +35,7 @@ This project is currently a frontend prototype.
 
 Prediction results are generated using mock data for demonstration purposes.
 
+To View: Click https://24a31a05iw.github.io/VoxID/
 ---
 
 ## Future Improvements
