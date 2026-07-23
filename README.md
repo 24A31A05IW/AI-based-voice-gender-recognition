@@ -1,19 +1,53 @@
-AI-Based Voice Gender Recognition
+# VoxID
 
-Project Overview
+VoxID is a modern web application for voice gender recognition. It provides an intuitive interface for recording or uploading audio and displaying gender prediction results with confidence scores. This project currently serves as a frontend prototype and is designed to integrate with a machine learning model in future versions.
 
-AI-Based Voice Gender Recognition is a web application that allows users to record their voice and receive a gender prediction with confidence percentage. This frontend project demonstrates audio capture, interactive UI, and mock AI integration. It is designed as a beginner-friendly project but showcases hands-on coding and web development skills.
+---
 
-Features
-* Record audio directly in the browser
-* Play back recorded audio
-* Shows mock gender prediction with confidence percentage
-* “Take Again” feature to retry recording
-* Clean, responsive, and user-friendly interface
+## Preview
 
-Tech Stack
+A clean, responsive interface built with a modern AI-inspired design.
 
-* HTML – Structure of the app
-* CSS – Styling and responsive design
-* JavaScript – Audio recording, DOM manipulation, mock AI prediction
+### Features
+
+- Record voice directly from your browser
+- Upload audio files
+- Display prediction results
+- Confidence score visualization
+- Responsive design for desktop, tablet, and mobile
+- Modern glassmorphism UI
+- Easy integration with a Python backend
+
+---
+
+## Built With
+
+- HTML5
+- CSS3
+- JavaScript
+- MediaRecorder API
+
+---
+
+## Current Status
+
+This project is currently a frontend prototype.
+
+Prediction results are generated using mock data for demonstration purposes.
+
+---
+
+## Future Improvements
+
+- Integrate a trained machine learning model
+- FastAPI backend
+- Real-time audio feature extraction
+- Support for multiple audio formats
+- Waveform visualization
+- Confidence gauge
+- Prediction history
+- User authentication
+- REST API integration
+- Dark and Light mode
+- Performance optimization
 
