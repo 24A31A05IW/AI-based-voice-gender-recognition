@@ -1,65 +1,123 @@
 const recordBtn = document.getElementById("recordBtn");
 const stopBtn = document.getElementById("stopBtn");
 const takeAgainBtn = document.getElementById("takeAgainBtn");
-const resultDiv = document.getElementById("result");
-const genderText = document.getElementById("gender");
-const confidenceText = document.getElementById("confidence");
+
 const audioPlayer = document.getElementById("audioPlayer");
+const result = document.getElementById("result");
+
+const gender = document.getElementById("gender");
+const confidence = document.getElementById("confidence");
+const progressBar = document.getElementById("progressBar");
 
 let mediaRecorder;
 let audioChunks = [];
 
-// Mock prediction function
-function mockGenderPrediction() {
-    const genders = ["Male", "Female"];
-    const randomGender = genders[Math.floor(Math.random() * genders.length)];
-    const randomConfidence = (Math.random() * (100 - 80) + 80).toFixed(2); // 80% to 100%
-    return { gender: randomGender, confidence: randomConfidence };
+/* -------------------------
+   Mock AI Prediction
+------------------------- */
+
+function mockPrediction() {
+
+    const predictedGender =
+        Math.random() > 0.5 ? "Male" : "Female";
+
+    const confidenceScore =
+        (80 + Math.random() * 20).toFixed(1);
+
+    return {
+        gender: predictedGender,
+        confidence: confidenceScore
+    };
 }
 
-// Start Recording
+/* -------------------------
+   Start Recording
+------------------------- */
+
 recordBtn.addEventListener("click", async () => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert("Your browser does not support audio recording.");
-        return;
+
+    try {
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true
+        });
+
+        mediaRecorder = new MediaRecorder(stream);
+
+        audioChunks = [];
+
+        mediaRecorder.start();
+
+        mediaRecorder.addEventListener("dataavailable", event => {
+            audioChunks.push(event.data);
+        });
+
+        mediaRecorder.addEventListener("stop", () => {
+
+            const audioBlob = new Blob(audioChunks, {
+                type: "audio/wav"
+            });
+
+            const audioURL =
+                URL.createObjectURL(audioBlob);
+
+            audioPlayer.src = audioURL;
+            audioPlayer.hidden = false;
+
+            const prediction = mockPrediction();
+
+            gender.textContent = prediction.gender;
+
+            confidence.textContent =
+                prediction.confidence + "%";
+
+            progressBar.style.width =
+                prediction.confidence + "%";
+
+            result.classList.remove("hidden");
+
+        });
+
+        recordBtn.disabled = true;
+        stopBtn.disabled = false;
+
+    } catch (error) {
+
+        alert("Microphone access was denied.");
+
     }
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
-
-    mediaRecorder.start();
-    audioChunks = [];
-
-    mediaRecorder.addEventListener("dataavailable", event => {
-        audioChunks.push(event.data);
-    });
-
-    mediaRecorder.addEventListener("stop", () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        audioPlayer.src = audioUrl;
-        audioPlayer.style.display = "block";
-
-        // Show mock prediction
-        const prediction = mockGenderPrediction();
-        genderText.textContent = `Gender: ${prediction.gender}`;
-        confidenceText.textContent = `Confidence: ${prediction.confidence}%`;
-        resultDiv.style.display = "block";
-    });
-
-    recordBtn.disabled = true;
-    stopBtn.disabled = false;
 });
 
-// Stop Recording
+/* -------------------------
+   Stop Recording
+------------------------- */
+
 stopBtn.addEventListener("click", () => {
-    mediaRecorder.stop();
-    recordBtn.disabled = false;
-    stopBtn.disabled = true;
+
+    if (mediaRecorder) {
+
+        mediaRecorder.stop();
+
+        recordBtn.disabled = false;
+        stopBtn.disabled = true;
+
+    }
+
 });
 
-// Take Again
+/* -------------------------
+   Analyze Another Voice
+------------------------- */
+
 takeAgainBtn.addEventListener("click", () => {
-    resultDiv.style.display = "none";
-    audioPlayer.style.display = "none";
+
+    result.classList.add("hidden");
+
+    audioPlayer.hidden = true;
+
+    audioPlayer.src = "";
+
+    progressBar.style.width = "0%";
+
 });
