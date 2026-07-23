@@ -5,219 +5,129 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>VoxID | AI Voice Gender Recognition</title>
+    <title>VoxID — AI Voice Gender Recognition</title>
 
     <meta name="description"
-        content="Analyze voice recordings with AI-powered gender recognition. Record or upload audio and receive instant predictions with confidence scores.">
+        content="Record or upload audio and get an instant AI-powered voice gender prediction with a confidence score.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
-
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <div class="background-glow glow-one"></div>
-    <div class="background-glow glow-two"></div>
+    <div class="grain"></div>
 
     <main class="app">
 
-        <section class="hero">
-
-            <span class="badge">
-                <i class="fa-solid fa-sparkles"></i>
-                AI Powered
+        <header class="hero">
+            <span class="eyebrow">
+                <span class="eyebrow-dot"></span>
+                Frontend prototype · mock predictions
             </span>
 
-            <h1>
-                Voice Gender
-                <span>Recognition</span>
+            <h1 class="wordmark">
+                Vox<span>ID</span>
             </h1>
 
-            <p>
-                Record your voice or upload an audio file to receive an AI-powered gender prediction with confidence
-                analysis.
+            <p class="tagline">
+                Speak, or drop in a recording. VoxID reads the waveform
+                and returns a gender prediction with a confidence score.
             </p>
+        </header>
 
+        <section class="panel" aria-label="Record or upload audio">
+
+            <div class="stage">
+                <canvas id="waveCanvas" width="640" height="120" aria-hidden="true"></canvas>
+
+                <button id="micBtn" class="mic-btn" type="button" aria-pressed="false">
+                    <svg class="mic-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M6 11a6 6 0 0 0 12 0M12 17v3.5" stroke="currentColor" stroke-width="1.8"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <svg class="stop-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor" />
+                    </svg>
+                </button>
+            </div>
+
+            <p id="statusText" class="status">Ready when you are</p>
+            <div id="timer" class="timer">00:00</div>
+
+            <div class="divider" role="separator">
+                <span>or upload a file</span>
+            </div>
+
+            <label id="dropZone" class="drop-zone" for="audioUpload">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 16V4m0 0 4 4m-4-4-4 4" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span class="drop-title">Drag a file here, or <u>browse</u></span>
+                <span class="drop-sub">WAV or MP3, up to a few minutes long</span>
+                <input type="file" id="audioUpload" accept=".wav,.mp3,audio/*" hidden>
+            </label>
+
+            <audio id="audioPlayer" controls hidden></audio>
         </section>
 
-        <section class="voice-card">
+        <section id="result" class="result-panel hidden" aria-live="polite">
 
-            <div class="mic-wrapper">
-
-                <div class="pulse-ring"></div>
-
-                <button id="recordBtn" class="mic-button">
-                    <i class="fa-solid fa-microphone"></i>
-                </button>
-
+            <div class="result-top">
+                <span class="result-label">Prediction</span>
+                <span id="genderTag" class="gender-tag">—</span>
             </div>
 
-            <h2 id="statusText">
-                Ready to Record
-            </h2>
-
-            <p class="subtitle">
-                Press the microphone to begin.
-            </p>
-
-            <div id="timer">
-                00:00
+            <div class="confidence-row">
+                <span class="confidence-label">Confidence</span>
+                <span id="confidenceValue" class="confidence-value">0%</span>
             </div>
 
-            <div class="button-group">
+            <div id="voiceprint" class="voiceprint" aria-hidden="true"></div>
 
-                <button id="recordBtnAlt" class="primary-btn">
-                    Start Recording
-                </button>
-
-                <button id="stopBtn" class="secondary-btn" disabled>
-                    Stop
-                </button>
-
-            </div>
-
-            <div class="upload-area">
-
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-
-                <h3>Upload Audio</h3>
-
-                <p>
-                    Drag & Drop or choose a WAV / MP3 file.
-                </p>
-
-                <input
-                    type="file"
-                    id="audioUpload"
-                    accept=".wav,.mp3,audio/*">
-
-            </div>
-
-            <audio
-                id="audioPlayer"
-                controls
-                hidden>
-            </audio>
-
-        </section>
-
-        <section
-            id="result"
-            class="result-card hidden">
-
-            <div class="result-header">
-
-                <i class="fa-solid fa-circle-check"></i>
-
-                <h2>
-                    Prediction Complete
-                </h2>
-
-            </div>
-
-            <div class="prediction">
-
-                <div id="genderIcon">
-                    👤
-                </div>
-
-                <h3 id="gender">
-                    --
-                </h3>
-
-            </div>
-
-            <div class="confidence-wrapper">
-
-                <div class="confidence-top">
-
-                    <span>
-                        Confidence
-                    </span>
-
-                    <span id="confidence">
-                        0%
-                    </span>
-
-                </div>
-
-                <div class="progress">
-
-                    <div
-                        id="progressBar"
-                        class="progress-fill">
-                    </div>
-
-                </div>
-
-            </div>
-
-            <button id="takeAgainBtn" class="primary-btn">
-                Analyze Another Voice
-            </button>
-
+            <button id="resetBtn" class="ghost-btn" type="button">Analyze another voice</button>
         </section>
 
         <section class="features">
 
             <article class="feature">
-
-                <i class="fa-solid fa-microphone-lines"></i>
-
-                <h3>Live Recording</h3>
-
-                <p>
-                    Capture your voice directly from your browser.
-                </p>
-
+                <span class="feature-index">01</span>
+                <h3>Live recording</h3>
+                <p>Capture straight from your browser mic, no plugins.</p>
             </article>
 
             <article class="feature">
-
-                <i class="fa-solid fa-wave-square"></i>
-
-                <h3>Audio Upload</h3>
-
-                <p>
-                    Upload existing recordings in seconds.
-                </p>
-
+                <span class="feature-index">02</span>
+                <h3>File upload</h3>
+                <p>Drop in an existing WAV or MP3 recording instead.</p>
             </article>
 
             <article class="feature">
-
-                <i class="fa-solid fa-brain"></i>
-
-                <h3>AI Analysis</h3>
-
-                <p>
-                    Predict gender with confidence scoring.
-                </p>
-
+                <span class="feature-index">03</span>
+                <h3>Confidence score</h3>
+                <p>Every prediction ships with a readable certainty score.</p>
             </article>
 
         </section>
 
-        <footer>
-
-            <p>
-                Built with HTML, CSS and JavaScript.
-            </p>
-
+        <footer class="site-footer">
+            <p>Built with HTML, CSS &amp; JavaScript — predictions are simulated pending a trained backend model.</p>
         </footer>
 
     </main>
 
     <script src="script.js"></script>
-
 </body>
 
 </html>
