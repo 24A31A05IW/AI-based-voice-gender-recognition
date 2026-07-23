@@ -2,19 +2,24 @@
    Element refs
    ============================================ */
 const micBtn = document.getElementById("micBtn");
+const recLabel = document.getElementById("recLabel");
+const clockEl = document.getElementById("clock");
 const statusText = document.getElementById("statusText");
-const timerEl = document.getElementById("timer");
-const waveCanvas = document.getElementById("waveCanvas");
-const waveCtx = waveCanvas.getContext("2d");
+const inputLed = document.getElementById("inputLed");
+
+const spectrogram = document.getElementById("spectrogram");
+const sgCtx = spectrogram.getContext("2d");
 
 const dropZone = document.getElementById("dropZone");
 const audioUpload = document.getElementById("audioUpload");
 const audioPlayer = document.getElementById("audioPlayer");
 
-const resultPanel = document.getElementById("result");
+const outputModule = document.getElementById("outputModule");
 const genderTag = document.getElementById("genderTag");
 const confidenceValue = document.getElementById("confidenceValue");
-const voiceprint = document.getElementById("voiceprint");
+const gaugeFill = document.getElementById("gaugeFill");
+const needle = document.getElementById("needle");
+const gaugeTicks = document.getElementById("gaugeTicks");
 const resetBtn = document.getElementById("resetBtn");
 
 /* ============================================
@@ -25,22 +30,22 @@ let audioChunks = [];
 let audioContext = null;
 let analyser = null;
 let sourceNode = null;
-let animationId = null;
-let timerInterval = null;
+let rafId = null;
+let clockInterval = null;
 let elapsedSeconds = 0;
 let isRecording = false;
 
 /* ============================================
-   Mock prediction (placeholder for future model)
+   Mock prediction (placeholder for a trained model)
    ============================================ */
 function mockPrediction() {
     const isMale = Math.random() > 0.5;
-    const confidence = +(80 + Math.random() * 20).toFixed(1);
+    const confidence = +(78 + Math.random() * 21).toFixed(1);
     return { gender: isMale ? "Male" : "Female", confidence };
 }
 
 /* ============================================
-   Timer
+   Clock
    ============================================ */
 function formatTime(totalSeconds) {
     const m = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
@@ -48,77 +53,116 @@ function formatTime(totalSeconds) {
     return `${m}:${s}`;
 }
 
-function startTimer() {
+function startClock() {
     elapsedSeconds = 0;
-    timerEl.textContent = formatTime(0);
-    timerEl.classList.add("live");
-    timerInterval = setInterval(() => {
+    clockEl.textContent = formatTime(0);
+    clockInterval = setInterval(() => {
         elapsedSeconds += 1;
-        timerEl.textContent = formatTime(elapsedSeconds);
+        clockEl.textContent = formatTime(elapsedSeconds);
     }, 1000);
 }
 
-function stopTimer() {
-    clearInterval(timerInterval);
-    timerEl.classList.remove("live");
+function stopClock() {
+    clearInterval(clockInterval);
 }
 
 /* ============================================
-   Waveform visualization (live, via Web Audio API)
+   Scrolling spectrogram (waterfall) display
    ============================================ */
-function resizeCanvas() {
-    const rect = waveCanvas.getBoundingClientRect();
+function sizeSpectrogram() {
+    const rect = spectrogram.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    waveCanvas.width = rect.width * dpr;
-    waveCanvas.height = rect.height * dpr;
-    waveCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    spectrogram.width = rect.width * dpr;
+    spectrogram.height = rect.height * dpr;
+    sgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sgCtx.fillStyle = "#ece8db";
+    sgCtx.fillRect(0, 0, rect.width, rect.height);
 }
 
-function drawIdleWave() {
-    resizeCanvas();
-    const { width, height } = waveCanvas.getBoundingClientRect();
-    waveCtx.clearRect(0, 0, width, height);
+function colorForLevel(v) {
+    // v: 0..1 amplitude -> paper ink through teal to rust
+    if (v < 0.5) {
+        const t = v / 0.5;
+        return mixColor([236, 232, 219], [36, 83, 74], t);
+    }
+    const t = (v - 0.5) / 0.5;
+    return mixColor([36, 83, 74], [166, 68, 42], t);
 }
 
-function drawLiveWave() {
+function mixColor(a, b, t) {
+    const r = Math.round(a[0] + (b[0] - a[0]) * t);
+    const g = Math.round(a[1] + (b[1] - a[1]) * t);
+    const bl = Math.round(a[2] + (b[2] - a[2]) * t);
+    return `rgb(${r}, ${g}, ${bl})`;
+}
+
+function drawSpectrogramColumn() {
+    const rect = spectrogram.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+
+    // shift existing image left by 2px
+    sgCtx.drawImage(spectrogram, 2, 0, width - 2, height, 0, 0, width - 2, height);
+
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
-    const { width, height } = waveCanvas.getBoundingClientRect();
-    const barCount = 40;
-    const step = Math.floor(bufferLength / barCount);
+    analyser.getByteFrequencyData(dataArray);
 
-    function render() {
-        animationId = requestAnimationFrame(render);
-        analyser.getByteFrequencyData(dataArray);
-        waveCtx.clearRect(0, 0, width, height);
+    const bins = 48;
+    const step = Math.max(1, Math.floor(bufferLength / bins));
+    const rowHeight = height / bins;
 
-        const barWidth = width / barCount;
-        const centerY = height / 2;
-
-        for (let i = 0; i < barCount; i++) {
-            const value = dataArray[i * step] || 0;
-            const barHeight = Math.max(3, (value / 255) * (height * 0.9));
-            const x = i * barWidth + barWidth * 0.2;
-            const w = barWidth * 0.6;
-
-            const gradient = waveCtx.createLinearGradient(0, centerY - barHeight / 2, 0, centerY + barHeight / 2);
-            gradient.addColorStop(0, "#ff6b4a");
-            gradient.addColorStop(1, "#4ade9f");
-            waveCtx.fillStyle = gradient;
-
-            waveCtx.beginPath();
-            waveCtx.roundRect(x, centerY - barHeight / 2, w, barHeight, 3);
-            waveCtx.fill();
-        }
+    for (let i = 0; i < bins; i++) {
+        const value = dataArray[i * step] || 0;
+        const level = value / 255;
+        sgCtx.fillStyle = colorForLevel(level);
+        // low frequencies at bottom, high at top
+        const y = height - (i + 1) * rowHeight;
+        sgCtx.fillRect(width - 2, y, 2, rowHeight + 0.5);
     }
-
-    render();
 }
 
-function stopLiveWave() {
-    if (animationId) cancelAnimationFrame(animationId);
-    animationId = null;
-    drawIdleWave();
+function runSpectrogram() {
+    function frame() {
+        rafId = requestAnimationFrame(frame);
+        drawSpectrogramColumn();
+    }
+    frame();
+}
+
+function stopSpectrogram() {
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+}
+
+/* ============================================
+   Gauge ticks (drawn once)
+   ============================================ */
+function buildGaugeTicks() {
+    const center = { x: 110, y: 116 };
+    const rInner = 82;
+    const rOuter = 92;
+    const fractions = [0, 0.25, 0.5, 0.75, 1];
+
+    fractions.forEach((f) => {
+        const angleDeg = -90 + f * 180;
+        const rad = (angleDeg * Math.PI) / 180;
+        const dx = Math.sin(rad);
+        const dy = -Math.cos(rad);
+
+        const x1 = center.x + dx * rInner;
+        const y1 = center.y + dy * rInner;
+        const x2 = center.x + dx * rOuter;
+        const y2 = center.y + dy * rOuter;
+
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1.toFixed(1));
+        line.setAttribute("y1", y1.toFixed(1));
+        line.setAttribute("x2", x2.toFixed(1));
+        line.setAttribute("y2", y2.toFixed(1));
+        line.setAttribute("class", "gauge-ticks");
+        gaugeTicks.appendChild(line);
+    });
 }
 
 /* ============================================
@@ -141,27 +185,29 @@ async function startRecording() {
         analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
         sourceNode.connect(analyser);
-        drawLiveWave();
+        runSpectrogram();
 
         mediaRecorder = new MediaRecorder(stream);
         audioChunks = [];
         mediaRecorder.addEventListener("dataavailable", (e) => audioChunks.push(e.data));
         mediaRecorder.addEventListener("stop", () => {
             const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
-            const audioURL = URL.createObjectURL(audioBlob);
-            audioPlayer.src = audioURL;
+            audioPlayer.src = URL.createObjectURL(audioBlob);
             audioPlayer.hidden = false;
             stream.getTracks().forEach((track) => track.stop());
-            showPrediction();
+            statusText.textContent = "PROCESSING — extracting pitch features";
+            setTimeout(showPrediction, 500);
         });
 
         mediaRecorder.start();
         isRecording = true;
         micBtn.setAttribute("aria-pressed", "true");
-        statusText.textContent = "Listening…";
-        startTimer();
+        recLabel.textContent = "Stop";
+        inputLed.classList.add("live");
+        statusText.textContent = "REC — listening";
+        startClock();
     } catch (error) {
-        statusText.textContent = "Microphone access was denied.";
+        statusText.textContent = "ERROR — microphone access denied";
     }
 }
 
@@ -172,11 +218,12 @@ function stopRecording() {
     if (audioContext) {
         audioContext.close();
     }
-    stopLiveWave();
-    stopTimer();
+    stopSpectrogram();
+    stopClock();
     isRecording = false;
     micBtn.setAttribute("aria-pressed", "false");
-    statusText.textContent = "Analyzing…";
+    recLabel.textContent = "Record";
+    inputLed.classList.remove("live");
 }
 
 /* ============================================
@@ -207,66 +254,53 @@ dropZone.addEventListener("drop", (e) => {
 });
 
 function handleUploadedFile(file) {
-    const audioURL = URL.createObjectURL(file);
-    audioPlayer.src = audioURL;
+    audioPlayer.src = URL.createObjectURL(file);
     audioPlayer.hidden = false;
-    statusText.textContent = `Analyzing “${file.name}”…`;
-    setTimeout(showPrediction, 600);
+    statusText.textContent = `PROCESSING — reading “${file.name}”`;
+    setTimeout(showPrediction, 700);
 }
 
 /* ============================================
-   Show prediction + voiceprint bars
+   Show prediction on the gauge
    ============================================ */
-function buildVoiceprint(confidence) {
-    voiceprint.innerHTML = "";
-    const barCount = 32;
-    for (let i = 0; i < barCount; i++) {
-        const bar = document.createElement("span");
-        const jitter = 0.55 + Math.random() * 0.45;
-        const level = Math.min(1, (confidence / 100) * jitter);
-        bar.style.height = `${Math.max(8, level * 100)}%`;
-        voiceprint.appendChild(bar);
-    }
-    requestAnimationFrame(() => {
-        [...voiceprint.children].forEach((bar) => {
-            bar.style.transform = "scaleY(1)";
-        });
-    });
-}
-
 function showPrediction() {
     const prediction = mockPrediction();
 
     genderTag.textContent = prediction.gender;
-    genderTag.className = "gender-tag " + prediction.gender.toLowerCase();
     confidenceValue.textContent = `${prediction.confidence}%`;
-    confidenceValue.style.color = prediction.gender === "Male" ? "var(--accent)" : "var(--accent-2)";
 
-    buildVoiceprint(prediction.confidence);
+    const angle = -90 + (prediction.confidence / 100) * 180;
+    needle.style.transform = `rotate(${angle}deg)`;
 
-    resultPanel.classList.remove("hidden");
-    statusText.textContent = "Ready when you are";
-    timerEl.textContent = "00:00";
+    const circumference = 302;
+    gaugeFill.style.strokeDashoffset = String(circumference - (prediction.confidence / 100) * circumference);
+    gaugeFill.style.stroke = prediction.confidence >= 90 ? "#24534a" : "#a6442a";
 
-    resultPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    outputModule.classList.remove("hidden");
+    statusText.textContent = "STANDBY — awaiting input";
+    clockEl.textContent = "00:00";
+
+    outputModule.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 /* ============================================
    Reset
    ============================================ */
 resetBtn.addEventListener("click", () => {
-    resultPanel.classList.add("hidden");
+    outputModule.classList.add("hidden");
     audioPlayer.hidden = true;
     audioPlayer.src = "";
     audioUpload.value = "";
-    voiceprint.innerHTML = "";
-    statusText.textContent = "Ready when you are";
+    needle.style.transform = "rotate(-90deg)";
+    gaugeFill.style.strokeDashoffset = "302";
+    statusText.textContent = "STANDBY — awaiting input";
 });
 
 /* ============================================
    Init
    ============================================ */
 window.addEventListener("resize", () => {
-    if (!isRecording) drawIdleWave();
+    if (!isRecording) sizeSpectrogram();
 });
-drawIdleWave();
+sizeSpectrogram();
+buildGaugeTicks();
