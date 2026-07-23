@@ -5,16 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>VoxID — AI Voice Gender Recognition</title>
+    <title>VoxID — Voice Gender Classifier</title>
 
     <meta name="description"
-        content="Record or upload audio and get an instant AI-powered voice gender prediction with a confidence score.">
+        content="A signal-analysis instrument for voice gender classification. Capture or upload audio and read the prediction off a live VU gauge.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
         rel="stylesheet">
 
     <link rel="stylesheet" href="style.css">
@@ -22,107 +22,113 @@
 
 <body>
 
-    <div class="grain"></div>
+    <main class="deck">
 
-    <main class="app">
-
-        <header class="hero">
-            <span class="eyebrow">
-                <span class="eyebrow-dot"></span>
-                Frontend prototype · mock predictions
-            </span>
-
-            <h1 class="wordmark">
-                Vox<span>ID</span>
-            </h1>
-
-            <p class="tagline">
-                Speak, or drop in a recording. VoxID reads the waveform
-                and returns a gender prediction with a confidence score.
-            </p>
+        <header class="nameplate">
+            <div class="nameplate-row">
+                <span class="model-tag">SIG&nbsp;·&nbsp;VXD-01</span>
+                <span class="model-tag">MOCK&nbsp;MODEL</span>
+            </div>
+            <h1>VoxID</h1>
+            <p class="subhead">A small instrument for reading gender off a voice —
+                capture a sample, and it prints a classification with a confidence reading.</p>
         </header>
 
-        <section class="panel" aria-label="Record or upload audio">
-
-            <div class="stage">
-                <canvas id="waveCanvas" width="640" height="120" aria-hidden="true"></canvas>
-
-                <button id="micBtn" class="mic-btn" type="button" aria-pressed="false">
-                    <svg class="mic-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" stroke="currentColor"
-                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                        <path d="M6 11a6 6 0 0 0 12 0M12 17v3.5" stroke="currentColor" stroke-width="1.8"
-                            stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                    <svg class="stop-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor" />
-                    </svg>
-                </button>
+        <!-- ============ INPUT MODULE ============ -->
+        <section class="module" aria-label="Signal input">
+            <div class="module-head">
+                <span class="module-num">01</span>
+                <span class="module-name">Capture</span>
+                <span class="led" id="inputLed" aria-hidden="true"></span>
             </div>
 
-            <p id="statusText" class="status">Ready when you are</p>
-            <div id="timer" class="timer">00:00</div>
+            <div class="module-body">
 
-            <div class="divider" role="separator">
-                <span>or upload a file</span>
+                <div class="scope">
+                    <canvas id="spectrogram" width="600" height="140" aria-hidden="true"></canvas>
+                    <div class="scope-labels" aria-hidden="true">
+                        <span>8kHz</span>
+                        <span>0Hz</span>
+                    </div>
+                </div>
+
+                <div class="transport">
+                    <button id="micBtn" class="rec-btn" type="button" aria-pressed="false">
+                        <span class="rec-dot"></span>
+                        <span id="recLabel">Record</span>
+                    </button>
+                    <span id="clock" class="clock">00:00</span>
+                </div>
+
+                <p id="statusText" class="status-line">STANDBY — awaiting input</p>
+
+                <div class="or-rule"><span>or feed in a file</span></div>
+
+                <label id="dropZone" class="drop-zone" for="audioUpload">
+                    <span class="drop-title">Drop a WAV / MP3, or <u>browse</u></span>
+                    <input type="file" id="audioUpload" accept=".wav,.mp3,audio/*" hidden>
+                </label>
+
+                <audio id="audioPlayer" controls hidden></audio>
             </div>
-
-            <label id="dropZone" class="drop-zone" for="audioUpload">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M12 16V4m0 0 4 4m-4-4-4 4" stroke="currentColor" stroke-width="1.8"
-                        stroke-linecap="round" stroke-linejoin="round" />
-                    <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.8"
-                        stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <span class="drop-title">Drag a file here, or <u>browse</u></span>
-                <span class="drop-sub">WAV or MP3, up to a few minutes long</span>
-                <input type="file" id="audioUpload" accept=".wav,.mp3,audio/*" hidden>
-            </label>
-
-            <audio id="audioPlayer" controls hidden></audio>
         </section>
 
-        <section id="result" class="result-panel hidden" aria-live="polite">
-
-            <div class="result-top">
-                <span class="result-label">Prediction</span>
-                <span id="genderTag" class="gender-tag">—</span>
+        <!-- ============ OUTPUT MODULE ============ -->
+        <section id="outputModule" class="module output hidden" aria-live="polite">
+            <div class="module-head">
+                <span class="module-num">02</span>
+                <span class="module-name">Classify</span>
+                <span class="led on" aria-hidden="true"></span>
             </div>
 
-            <div class="confidence-row">
-                <span class="confidence-label">Confidence</span>
-                <span id="confidenceValue" class="confidence-value">0%</span>
+            <div class="module-body output-body">
+
+                <div class="gauge-wrap">
+                    <svg class="gauge" viewBox="0 0 220 130" aria-hidden="true">
+                        <path d="M 14 116 A 96 96 0 0 1 206 116" class="gauge-track" />
+                        <path d="M 14 116 A 96 96 0 0 1 206 116" class="gauge-fill" id="gaugeFill" />
+                        <g id="gaugeTicks"></g>
+                        <line id="needle" x1="110" y1="116" x2="110" y2="34" class="needle" />
+                        <circle cx="110" cy="116" r="7" class="needle-hub" />
+                    </svg>
+                    <div class="gauge-readout">
+                        <span id="confidenceValue">0%</span>
+                        <span class="gauge-caption">confidence</span>
+                    </div>
+                </div>
+
+                <div class="verdict">
+                    <span class="verdict-label">Prediction</span>
+                    <span id="genderTag" class="verdict-value">—</span>
+                </div>
+
+                <button id="resetBtn" class="ghost-btn" type="button">Run another sample</button>
             </div>
-
-            <div id="voiceprint" class="voiceprint" aria-hidden="true"></div>
-
-            <button id="resetBtn" class="ghost-btn" type="button">Analyze another voice</button>
         </section>
 
-        <section class="features">
-
-            <article class="feature">
-                <span class="feature-index">01</span>
-                <h3>Live recording</h3>
-                <p>Capture straight from your browser mic, no plugins.</p>
-            </article>
-
-            <article class="feature">
-                <span class="feature-index">02</span>
-                <h3>File upload</h3>
-                <p>Drop in an existing WAV or MP3 recording instead.</p>
-            </article>
-
-            <article class="feature">
-                <span class="feature-index">03</span>
-                <h3>Confidence score</h3>
-                <p>Every prediction ships with a readable certainty score.</p>
-            </article>
-
+        <!-- ============ SIGNAL CHAIN ============ -->
+        <section class="chain">
+            <div class="chain-step">
+                <span class="chain-num">01</span>
+                <h3>Capture</h3>
+                <p>Record through the browser mic or drop in an existing file.</p>
+            </div>
+            <div class="chain-connector" aria-hidden="true"></div>
+            <div class="chain-step">
+                <span class="chain-num">02</span>
+                <h3>Extract</h3>
+                <p>Pitch and spectral-tilt features are pulled from the waveform.</p>
+            </div>
+            <div class="chain-connector" aria-hidden="true"></div>
+            <div class="chain-step">
+                <span class="chain-num">03</span>
+                <h3>Classify</h3>
+                <p>A model reads those features into a label and a confidence score.</p>
+            </div>
         </section>
 
         <footer class="site-footer">
-            <p>Built with HTML, CSS &amp; JavaScript — predictions are simulated pending a trained backend model.</p>
+            <p>Prototype interface — classification is simulated until a trained model is wired in behind it.</p>
         </footer>
 
     </main>
